@@ -12,7 +12,10 @@ function RouteComponent() {
     const formData = new FormData(e.currentTarget);
     const query = formData.get('query') as string;
     if (query) {
-      router.navigate({ to: '/analyze', search: { query } });
+      router.navigate({
+        to: '/analyze',
+        search: { query, timeFilter: 'month' },
+      });
     }
   }
 
