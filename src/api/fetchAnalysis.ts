@@ -9,7 +9,7 @@ export interface Analysis {
 }
 
 export async function fetchAnalysis(query: string, timeFilter: TimeFilter) {
-  const posts = await fetch('/api/predict', {
+  const posts = await fetch('/api/predict/', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -17,6 +17,5 @@ export async function fetchAnalysis(query: string, timeFilter: TimeFilter) {
     body: JSON.stringify({ query, time_filter: timeFilter }),
   });
   const data: Analysis = await posts.json();
-  await new Promise((r) => setTimeout(r, 3000));
   return data;
 }
