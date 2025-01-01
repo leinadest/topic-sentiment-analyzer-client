@@ -58,7 +58,7 @@ function SentimentPieChart({ comments }: SentimentPieChartInput) {
   ];
 
   return (
-    <ResponsiveContainer width="100%" height={700}>
+    <ResponsiveContainer width="100%" height={400}>
       <PieChart>
         <Pie dataKey="value" data={pieData} outerRadius="90%">
           <LabelList
@@ -66,7 +66,7 @@ function SentimentPieChart({ comments }: SentimentPieChartInput) {
             position="inside"
             stroke="none"
             fill="white"
-            style={{ fontSize: '1.5rem' }}
+            style={{ fontSize: '1rem' }}
           />
         </Pie>
         <Legend />

@@ -6,7 +6,6 @@
   #app {
     @apply m-0 p-8 flex flex-col
     min-h-screen min-w-full 
-    text-xl
     bg-bgPrimary text-textPrimary;
   }
 
@@ -20,7 +19,7 @@
   }
 
   h1 {
-    @apply text-7xl;
+    @apply text-4xl;
   }
 
   h2 {
@@ -44,10 +43,11 @@
   }
 
   p {
-    @apply text-xl text-textSecondary dark:text-textSecondary-dark;
+    @apply text-textSecondary dark:text-textSecondary-dark;
   }
 
-  button {
+  button,
+  select {
     @apply cursor-pointer;
   }
 
@@ -59,7 +59,8 @@
   }
 
   input,
-  textarea {
+  textarea,
+  select {
     @apply px-4 py-2 
     rounded-md
     bg-bgSecondary text-textSecondary dark:bg-bgSecondary-dark dark:text-textSecondary-dark;

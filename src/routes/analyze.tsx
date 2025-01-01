@@ -1,11 +1,12 @@
 import {
   createFileRoute,
-  useRouter,
   getRouteApi,
+  useRouter,
 } from '@tanstack/react-router';
 
-import { fetchAnalysis, TimeFilter } from '../api/fetchAnalysis';
+import { Analysis, fetchAnalysis, TimeFilter } from '../api/fetchAnalysis';
 import SentimentPieChart from '../components/SentimentPieChart';
+import SearchForm from '../components/SearchForm';
 
 type AnalyzeParams = {
   query: string;
@@ -13,97 +14,110 @@ type AnalyzeParams = {
 };
 
 export const Route = createFileRoute('/analyze')({
-  component: Analyze,
-  validateSearch: (search: Record<string, unknown>): AnalyzeParams => {
-    return {
-      query: search.query as string,
-      timeFilter: search.timeFilter ? (search.timeFilter as TimeFilter) : 'all',
-    };
-  },
-  loaderDeps: ({ search: { query } }) => ({ query }),
-  loader: async ({ deps: { query } }) => fetchAnalysis(query, 'all'),
-  pendingComponent: () => <div>Loading...</div>,
-  errorComponent: () => <div>Error</div>,
+  component: RouteComponent,
+  validateSearch: (search: Record<string, unknown>): AnalyzeParams => ({
+    query: search.query as string,
+    timeFilter: search.timeFilter ? (search.timeFilter as TimeFilter) : 'all',
+  }),
+  loaderDeps: ({ search: { query, timeFilter } }) => ({ query, timeFilter }),
+  loader: async ({ deps: { query, timeFilter } }) =>
+    fetchAnalysis(query, timeFilter),
+  pendingComponent: PendingComponent,
+  errorComponent: ErrorComponent,
 });
 
-function Analyze() {
-  const router = useRouter();
+// Route components
 
-  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    const formData = new FormData(e.currentTarget);
-    const query = formData.get('query') as string;
-    router.navigate({ to: '/analyze', search: { query, timeFilter: 'month' } });
-  }
-
+function RouteComponent() {
   const routeApi = getRouteApi('/analyze');
   const { query, timeFilter } = routeApi.useSearch();
   const data = routeApi.useLoaderData();
 
-  const comments = {
-    happy: [] as string[],
-    sad: [] as string[],
-    angry: [] as string[],
-    scared: [] as string[],
-    neutral: [] as string[],
-  };
-
-  data.predictions.forEach((prediction, index) => {
-    const comment = data.comments[index];
-    comments[prediction].push(comment);
-  });
+  const comments = categorizeComments(data.predictions, data.comments);
 
   return (
     <div className="flex flex-col gap-8 self-center w-full max-w-screen-xl">
-      <form
-        onSubmit={handleSubmit}
-        className="flex justify-center items-center"
-      >
-        <input
-          type="text"
-          name="query"
-          placeholder="Search"
-          className="m-4 w-full"
-        />
-        <button>Enter</button>
-      </form>
-
+      <SearchForm />
       <main>
         <h1 className="text-center">{query}</h1>
         <SentimentPieChart comments={comments} />
       </main>
+      <Summary data={data} comments={comments} timeFilter={timeFilter} />
+      <CommentSections comments={comments} />
+    </div>
+  );
+}
 
-      <section>
-        <h2>Summary</h2>
-        <ul>
-          <li>
-            <strong>Source</strong>: Reddit
-          </li>
-          <li>
-            <strong>Time Period</strong>: {timeFilter}
-          </li>
-          <li>
-            <strong>Posts</strong>: {data.submission_count}
-          </li>
-          <li>
-            <strong>Comments</strong>: {data.comments.length}
-          </li>
-          {Object.entries(comments).map(([key, value]) => (
-            <li key={key}>
-              <strong>
-                {key.charAt(0).toUpperCase() + key.slice(1)} Comments
-              </strong>
-              : {value.length}
-            </li>
-          ))}
-        </ul>
-      </section>
+function PendingComponent() {
+  return (
+    <p className="m-auto text-textSecondary">
+      Loading model...
+      <br />
+      Searching Reddit...
+      <br />
+      Analyzing comments...
+    </p>
+  );
+}
 
+function ErrorComponent() {
+  const router = useRouter();
+
+  function handleClick() {
+    router.invalidate();
+  }
+
+  return (
+    <div className="m-auto text-center">
+      <h1 className="mb-4">Error</h1>
+      <button onClick={handleClick}>Try again</button>
+    </div>
+  );
+}
+
+// Components
+
+function Summary({
+  data,
+  comments,
+  timeFilter,
+}: {
+  data: Analysis;
+  comments: Record<string, string[]>;
+  timeFilter: string;
+}) {
+  return (
+    <section>
+      <h2>Summary</h2>
+      <ul>
+        <li>
+          <strong>Source</strong>: Reddit
+        </li>
+        <li>
+          <strong>Time Period</strong>: {timeFilter}
+        </li>
+        <li>
+          <strong>Posts</strong>: {data.submission_count}
+        </li>
+        <li>
+          <strong>Comments</strong>: {data.comments.length}
+        </li>
+        {Object.entries(comments).map(([key, value]) => (
+          <li key={key}>
+            <strong>{capitalize(key)} Comments</strong>: {value.length}
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
+function CommentSections({ comments }: { comments: Record<string, string[]> }) {
+  return (
+    <>
       {Object.entries(comments).map(([emotion, commentList]) => (
         <section key={emotion}>
-          <h2>
-            Sample {emotion.charAt(0).toUpperCase() + emotion.slice(1)} Comments
-          </h2>
+          <h2>Sample {capitalize(emotion)} Comments</h2>
           <ul>
             {commentList.slice(0, 10).map((comment) => (
               <li key={comment}>
@@ -114,6 +128,29 @@ function Analyze() {
           </ul>
         </section>
       ))}
-    </div>
+    </>
   );
+}
+
+// Utilities
+
+function categorizeComments(predictions: string[], comments: string[]) {
+  const categorized = {
+    happy: Array<string>(),
+    sad: Array<string>(),
+    angry: Array<string>(),
+    scared: Array<string>(),
+    neutral: Array<string>(),
+  };
+
+  predictions.forEach((prediction, index) => {
+    const comment = comments[index];
+    categorized[prediction as keyof typeof categorized].push(comment);
+  });
+
+  return categorized;
+}
+
+function capitalize(str: string) {
+  return str.charAt(0).toUpperCase() + str.slice(1);
 }
