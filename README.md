@@ -20,7 +20,7 @@ Technologies used:
 - Docker
 - Nginx
 
-The backend server's source code can be found in the [topic-sentiment-analyzer-server](https://github.com/leinadest/topic-sentiment-analyzer-server) repository.
+The FastAPI server's source code can be found in the [topic-sentiment-analyzer-server](https://github.com/leinadest/topic-sentiment-analyzer-server) repository.
 
 ## Data Flow
 
