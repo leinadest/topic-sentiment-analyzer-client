@@ -10,6 +10,7 @@ server {
     }
 
     location /api/ {
+        proxy_set_header Authorization "Bearer $AUTH_TOKEN";
         proxy_pass $API_URL/;
         proxy_read_timeout 300;
     }
