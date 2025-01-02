@@ -1,5 +1,7 @@
 # Topic Sentiment Analyzer Client
 
+![Frontend Front Page](https://i.imgur.com/HgJjDk4.png)
+
 ## Description
 
 This client is a web application that allows users to input a common term or phrase and see a sentiment analysis of social media involving the input.
@@ -92,7 +94,7 @@ graph TD
 
 1. Start the backend server
 
-2. Start the development server:
+2. Start the development frontend server:
 
    ```bash
    npm run dev
